@@ -20,7 +20,6 @@
             padding: 0 50px;
         }
         
-        /* BRANDING */
         .titolo-logo {
             position: absolute;
             top: 20px;
@@ -28,7 +27,7 @@
             transform: translateX(-50%);
             font-size: 3.5em;
             font-weight: 900;
-            color: #ffd700; /* Oro */
+            color: #ffd700;
             text-transform: uppercase;
             letter-spacing: 2px;
             text-shadow: 0px 4px 15px rgba(0,0,0,0.8), 2px 2px 0px #ffaa00;
@@ -45,7 +44,6 @@
             z-index: 10;
         }
 
-        /* OVERLAY SBLOCCO AUDIO (Risolve il problema del blocco browser) */
         #sblocco-audio {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -84,7 +82,7 @@
             gap: 8px;
             z-index: 1;
             width: 250px;
-            height: 80vh; /* Permette la compressione verticale */
+            height: 80vh; 
         }
 
         .premio-box {
@@ -113,13 +111,8 @@
             box-shadow: none;
         }
 
-        /* GESTIONE MODALITA' VISUALIZZAZIONE DA REGIA */
-        body.mode-nascosto .colonna-premi {
-            display: none !important;
-        }
-        body.mode-restanti .premio-eliminato {
-            display: none !important;
-        }
+        body.mode-nascosto .colonna-premi { display: none !important; }
+        body.mode-restanti .premio-eliminato { display: none !important; }
 
         .area-centrale {
             flex-grow: 1;
@@ -189,13 +182,11 @@
 </head>
 <body class="mode-tutti">
 
-    <!-- Schermata iniziale obbligatoria per sbloccare l'audio -->
     <div id="sblocco-audio">
         <h1 style="color:white; margin-bottom: 30px;">Pronto per andare in onda!</h1>
         <button class="btn-sblocco" onclick="inizializzaAudio()">CLICCA QUI PER INIZIARE E ATTIVARE L'AUDIO</button>
     </div>
 
-    <!-- Branding -->
     <div class="titolo-logo">MegaAffari Tuoi</div>
     <div class="firma-watermark">Nicola Roberto</div>
 
@@ -213,7 +204,6 @@
 
     <div class="colonna-premi rossi" id="col-rossa"></div>
 
-    <!-- AUDIO -->
     <audio id="audio-sigla" src="sigla.mp3"></audio>
     <audio id="audio-telefono" src="telefono.mp3"></audio>
     <audio id="audio-suspense" src="suspense.mp3"></audio>
@@ -224,10 +214,8 @@
         const premiBlu = [0, 1, 5, 10, 20, 50, 100, 200, 500, 1000];
         const premiRossi = [5000, 10000, 15000, 20000, 30000, 50000, 75000, 100000, 200000, 300000];
 
-        // Funzione fondamentale per l'audio: sblocca il browser
         function inizializzaAudio() {
             document.getElementById('sblocco-audio').style.display = 'none';
-            // Suona a volume zero un audio per sbloccare il contesto audio
             const dummySound = document.getElementById('audio-telefono');
             dummySound.volume = 0;
             dummySound.play().then(() => {
@@ -257,7 +245,6 @@
 
         const socket = io();
 
-        // Cambio modalità display
         socket.on('set-display-mode', (mode) => {
             document.body.className = mode;
         });
@@ -303,10 +290,22 @@
             };
             const sound = audioMap[tipo];
             if(sound) {
+                // Se un altro suono sta suonando e ne fai partire uno nuovo,
+                // assicuriamoci che gli altri vengano fermati prima (opzionale ma consigliato)
+                document.querySelectorAll('audio').forEach(audio => audio.pause());
+                
                 sound.volume = 1;
                 sound.currentTime = 0;
                 sound.play().catch(e => console.log("AutoPlay bloccato:", e));
             }
+        });
+
+        // NUOVA FUNZIONE: Ferma tutti gli audio
+        socket.on('stop-audio', () => {
+            document.querySelectorAll('audio').forEach(audio => {
+                audio.pause();
+                audio.currentTime = 0;
+            });
         });
         
         socket.on('stato-pacchi', (pacchi) => {
