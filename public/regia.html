@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Affari Tuoi - Schermo</title>
+    <style>
+        body { margin: 0; background: #001f3f; color: white; font-family: sans-serif; overflow: hidden; }
+        #webcam-bg { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; opacity: 0.5; }
+        .container { text-align: center; padding: 50px; z-index: 1; position: relative; }
+        .pacco-aperto { font-size: 4em; font-weight: bold; margin-top: 20px; color: gold; text-shadow: 2px 2px 5px black; }
+        .offerta { font-size: 3em; color: red; background: white; padding: 20px; border-radius: 10px; display: none; margin-top: 20px;}
+    </style>
+</head>
+<body>
+    <!-- Feed della Webcam (Back-end video) -->
+    <video id="webcam-bg" autoplay muted></video>
+
+    <div class="container">
+        <h1>Tabellone Principale</h1>
+        <div id="azione-corrente" class="pacco-aperto">In attesa della Regia...</div>
+        <div id="banner-offerta" class="offerta"></div>
+    </div>
+
+    <!-- Script di Socket.io e Logica -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Attiva la webcam
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => { document.getElementById('webcam-bg').srcObject = stream; })
+            .catch(err => console.error("Errore webcam:", err));
+
+        const socket = io();
+
+        // Ascolta l'apertura del pacco
+        socket.on('display-apri-pacco', (pacco) => {
+            document.getElementById('azione-corrente').innerText = `Aperto il Pacco ${pacco.numeroPacco}: € ${pacco.valore}`;
+            document.getElementById('banner-offerta').style.display = 'none'; // Nasconde eventuali offerte precedenti
+        });
+
+        // Ascolta l'offerta del dottore
+        socket.on('display-mostra-offerta', (cifra) => {
+            const banner = document.getElementById('banner-offerta');
+            banner.innerText = `☎️ IL DOTTORE OFFRE: € ${cifra}`;
+            banner.style.display = 'inline-block';
+        });
+    </script>
+</body>
+</html>
