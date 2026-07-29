@@ -42,9 +42,11 @@ io.on('connection', (socket) => {
 
     socket.on('comando-offerta', (cifra) => io.emit('display-mostra-offerta', cifra));
     socket.on('comando-nascondi-offerta', () => io.emit('display-nascondi-offerta'));
-    socket.on('comando-audio', (tipo) => io.emit('play-audio', tipo));
     
-    // Novità: Gestione visualizzazione Display
+    // Gestione Audio
+    socket.on('comando-audio', (tipo) => io.emit('play-audio', tipo));
+    socket.on('comando-stop-audio', () => io.emit('stop-audio')); // NUOVO COMANDO STOP
+    
     socket.on('comando-display-mode', (mode) => io.emit('set-display-mode', mode));
 
     socket.on('comando-nuova-partita', () => {
