@@ -2,47 +2,62 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Affari Tuoi - Schermo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Affari Tuoi - Regia</title>
     <style>
-        body { margin: 0; background: #001f3f; color: white; font-family: sans-serif; overflow: hidden; }
-        #webcam-bg { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; opacity: 0.5; }
-        .container { text-align: center; padding: 50px; z-index: 1; position: relative; }
-        .pacco-aperto { font-size: 4em; font-weight: bold; margin-top: 20px; color: gold; text-shadow: 2px 2px 5px black; }
-        .offerta { font-size: 3em; color: red; background: white; padding: 20px; border-radius: 10px; display: none; margin-top: 20px;}
+        body { background: #333; color: white; font-family: sans-serif; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 30px; }
+        button { padding: 15px; font-size: 16px; font-weight: bold; cursor: pointer; background: #0074D9; color: white; border: none; border-radius: 5px; }
+        button:disabled { background: #555; cursor: not-allowed; }
+        .dottore-box { background: #85144b; padding: 20px; border-radius: 10px; }
+        input { padding: 10px; font-size: 16px; width: 60%; }
     </style>
 </head>
 <body>
-    <!-- Feed della Webcam (Back-end video) -->
-    <video id="webcam-bg" autoplay muted></video>
-
-    <div class="container">
-        <h1>Tabellone Principale</h1>
-        <div id="azione-corrente" class="pacco-aperto">In attesa della Regia...</div>
-        <div id="banner-offerta" class="offerta"></div>
+    <h2>Regia Mobile</h2>
+    
+    <h3>Apri i Pacchi:</h3>
+    <div id="griglia-pacchi" class="grid">
+        <!-- I pulsanti vengono generati da JS -->
     </div>
 
-    <!-- Script di Socket.io e Logica -->
+    <div class="dottore-box">
+        <h3>☎️ Offerta del Dottore</h3>
+        <input type="number" id="input-offerta" placeholder="Inserisci cifra (es. 15000)">
+        <button onclick="inviaOfferta()" style="background: white; color: black; width: 35%;">Invia al Display</button>
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        // Attiva la webcam
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => { document.getElementById('webcam-bg').srcObject = stream; })
-            .catch(err => console.error("Errore webcam:", err));
-
         const socket = io();
 
-        // Ascolta l'apertura del pacco
-        socket.on('display-apri-pacco', (pacco) => {
-            document.getElementById('azione-corrente').innerText = `Aperto il Pacco ${pacco.numeroPacco}: € ${pacco.valore}`;
-            document.getElementById('banner-offerta').style.display = 'none'; // Nasconde eventuali offerte precedenti
+        // Riceve lo stato dei pacchi dal server e crea i bottoni
+        socket.on('stato-pacchi', (pacchi) => {
+            const griglia = document.getElementById('griglia-pacchi');
+            griglia.innerHTML = ''; // Svuota la griglia
+            
+            pacchi.forEach(pacco => {
+                const btn = document.createElement('button');
+                // Mostra il numero. Tu, come conduttore, puoi vedere il valore per fare il Dottore!
+                btn.innerText = `Pacco ${pacco.numeroPacco}\n(€ ${pacco.valore})`;
+                btn.disabled = pacco.aperto;
+                
+                btn.onclick = () => {
+                    if(confirm(`Sei sicuro di voler aprire il Pacco ${pacco.numeroPacco}?`)) {
+                        socket.emit('comando-apri-pacco', pacco.numeroPacco);
+                    }
+                };
+                griglia.appendChild(btn);
+            });
         });
 
-        // Ascolta l'offerta del dottore
-        socket.on('display-mostra-offerta', (cifra) => {
-            const banner = document.getElementById('banner-offerta');
-            banner.innerText = `☎️ IL DOTTORE OFFRE: € ${cifra}`;
-            banner.style.display = 'inline-block';
-        });
+        function inviaOfferta() {
+            const cifra = document.getElementById('input-offerta').value;
+            if(cifra) {
+                socket.emit('comando-offerta', cifra);
+                document.getElementById('input-offerta').value = '';
+            }
+        }
     </script>
 </body>
 </html>
