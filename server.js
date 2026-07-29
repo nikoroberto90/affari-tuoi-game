@@ -7,7 +7,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-app.use(express.static(path.join(__dirname, 'public'))); // Assicurati che i file html siano nella cartella public!
+app.use(express.static(path.join(__dirname, 'public')));
 
 const premiBase = [
     0, 1, 5, 10, 20, 50, 100, 200, 500, 1000,
@@ -29,7 +29,6 @@ function avviaNuovaPartita() {
 avviaNuovaPartita();
 
 io.on('connection', (socket) => {
-    // Invia stato iniziale
     socket.emit('stato-pacchi', pacchiGioco);
 
     socket.on('comando-apri-pacco', (numeroPacco) => {
@@ -37,20 +36,20 @@ io.on('connection', (socket) => {
         if (pacco && !pacco.aperto) {
             pacco.aperto = true;
             io.emit('display-apri-pacco', pacco);
-            io.emit('stato-pacchi', pacchiGioco); // Aggiorna regia
+            io.emit('stato-pacchi', pacchiGioco);
         }
     });
 
     socket.on('comando-offerta', (cifra) => io.emit('display-mostra-offerta', cifra));
     socket.on('comando-nascondi-offerta', () => io.emit('display-nascondi-offerta'));
-    
-    // Novità: Gestione Audio
     socket.on('comando-audio', (tipo) => io.emit('play-audio', tipo));
+    
+    // Novità: Gestione visualizzazione Display
+    socket.on('comando-display-mode', (mode) => io.emit('set-display-mode', mode));
 
-    // Novità: Reset partita
     socket.on('comando-nuova-partita', () => {
         avviaNuovaPartita();
-        io.emit('stato-pacchi', pacchiGioco); // Forza reset grafico display e regia
+        io.emit('stato-pacchi', pacchiGioco);
     });
 });
 
