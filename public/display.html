@@ -2,46 +2,260 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Affari Tuoi - Schermo</title>
     <style>
-        body { margin: 0; background: #001f3f; color: white; font-family: sans-serif; overflow: hidden; }
-        #webcam-bg { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; opacity: 0.5; }
-        .container { text-align: center; padding: 50px; z-index: 1; position: relative; }
-        .pacco-aperto { font-size: 4em; font-weight: bold; margin-top: 20px; color: gold; text-shadow: 2px 2px 5px black; }
-        .offerta { font-size: 3em; color: red; background: white; padding: 20px; border-radius: 10px; display: none; margin-top: 20px;}
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap');
+
+        body { 
+            margin: 0; 
+            background: #000a1a; /* Sfondo scuro elegante */
+            color: white; 
+            font-family: 'Montserrat', sans-serif; 
+            overflow: hidden; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 100vh;
+            padding: 0 50px;
+        }
+
+        /* Feed della Webcam in background */
+        #webcam-bg { 
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 100vw; height: 100vh; 
+            object-fit: cover; 
+            z-index: -1; 
+            opacity: 0.6; /* Un po' più visibile */
+        }
+
+        /* Colonne dei premi */
+        .colonna-premi {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 1;
+            width: 250px;
+        }
+
+        .premio-box {
+            background: linear-gradient(to right, #004488, #0066cc); /* Blu scuro/chiaro */
+            border: 2px solid #00aaff;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 900;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            transition: all 0.5s ease;
+        }
+
+        /* Premi Rossi (metà destra) */
+        .colonna-premi.rossi .premio-box {
+            background: linear-gradient(to right, #880000, #cc0000);
+            border-color: #ff3333;
+        }
+
+        /* Stato premio eliminato */
+        .premio-eliminato {
+            background: #222 !important;
+            border-color: #444 !important;
+            color: #555 !important;
+            text-shadow: none;
+            box-shadow: none;
+        }
+
+        /* Area Centrale per animazioni (Apertura Pacco / Offerta) */
+        .area-centrale {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+        }
+
+        /* Animazione apertura pacco */
+        #azione-corrente {
+            font-size: 5em;
+            font-weight: 900;
+            color: #ffd700;
+            text-shadow: 0 0 20px #ffaa00, 3px 3px 10px black;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px 40px;
+            border-radius: 20px;
+            border: 3px solid #ffd700;
+            display: none;
+        }
+        
+        #azione-corrente.mostra {
+            display: block;
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Banner Offerta del Dottore */
+        #banner-offerta {
+            display: none;
+            background: linear-gradient(to bottom, #eeeeee, #cccccc);
+            border: 10px solid #222;
+            border-radius: 15px;
+            padding: 30px 60px;
+            color: #cc0000;
+            font-size: 6em;
+            font-weight: 900;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+
+        #banner-offerta.mostra {
+            display: block;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .etichetta-offerta {
+            font-size: 0.3em;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            margin-bottom: 10px;
+        }
+
+        /* Elementi Audio nascosti */
+        audio { display: none; }
     </style>
 </head>
 <body>
-    <!-- Feed della Webcam (Back-end video) -->
     <video id="webcam-bg" autoplay muted></video>
 
-    <div class="container">
-        <h1>Tabellone Principale</h1>
-        <div id="azione-corrente" class="pacco-aperto">In attesa della Regia...</div>
-        <div id="banner-offerta" class="offerta"></div>
+    <!-- Colonna Blu (da 0 a 500) -->
+    <div class="colonna-premi blu" id="col-blu">
+        <!-- Generati da JS -->
     </div>
 
-    <!-- Script di Socket.io e Logica -->
+    <!-- Area Centrale (Animazioni) -->
+    <div class="area-centrale">
+        <div id="azione-corrente"></div>
+        <div id="banner-offerta">
+            <div class="etichetta-offerta">Il Dottore Offre</div>
+            <span id="cifra-offerta"></span>
+        </div>
+    </div>
+
+    <!-- Colonna Rossa (da 1.000 a 300.000) -->
+    <div class="colonna-premi rossi" id="col-rossa">
+        <!-- Generati da JS -->
+    </div>
+
+    <!-- Suoni predefiniti (Usa URL pubblici o file locali se li hai) -->
+    <audio id="audio-sigla" src="https://www.myinstants.com/media/sounds/affari-tuoi-sigla.mp3"></audio>
+    <audio id="audio-telefono" src="https://www.myinstants.com/media/sounds/telefono-squillo.mp3"></audio>
+    <audio id="audio-suspense" src="https://www.myinstants.com/media/sounds/suspense-drum-roll.mp3"></audio>
+
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        // Attiva la webcam
+        const formatEuro = (num) => "€ " + num.toLocaleString('it-IT');
+
+        const premiBlu = [0, 1, 5, 10, 20, 50, 100, 200, 500, 1000]; // 1000 è qui per dividere a metà (10 e 10)
+        const premiRossi = [5000, 10000, 15000, 20000, 30000, 50000, 75000, 100000, 200000, 300000];
+
+        // Creazione Tabellone
+        function creaTabellone() {
+            const colBlu = document.getElementById('col-blu');
+            const colRossa = document.getElementById('col-rossa');
+            colBlu.innerHTML = ''; colRossa.innerHTML = '';
+
+            premiBlu.forEach(val => {
+                colBlu.innerHTML += `<div class="premio-box" id="premio-${val}">${formatEuro(val)}</div>`;
+            });
+            premiRossi.forEach(val => {
+                colRossa.innerHTML += `<div class="premio-box" id="premio-${val}">${formatEuro(val)}</div>`;
+            });
+        }
+        creaTabellone();
+
+        // Webcam
         navigator.mediaDevices.getUserMedia({ video: true })
             .then(stream => { document.getElementById('webcam-bg').srcObject = stream; })
-            .catch(err => console.error("Errore webcam:", err));
+            .catch(err => console.error("Webcam non trovata"));
 
         const socket = io();
 
-        // Ascolta l'apertura del pacco
+        // Riceve comando apertura pacco
         socket.on('display-apri-pacco', (pacco) => {
-            document.getElementById('azione-corrente').innerText = `Aperto il Pacco ${pacco.numeroPacco}: € ${pacco.valore}`;
-            document.getElementById('banner-offerta').style.display = 'none'; // Nasconde eventuali offerte precedenti
+            // Nascondi eventuale offerta
+            document.getElementById('banner-offerta').classList.remove('mostra');
+            setTimeout(() => document.getElementById('banner-offerta').style.display = 'none', 500);
+
+            // Scurisci il premio nel tabellone
+            const elementoPremio = document.getElementById(`premio-${pacco.valore}`);
+            if(elementoPremio) {
+                elementoPremio.classList.add('premio-eliminato');
+            }
+
+            // Mostra animazione centrale
+            const azioneDiv = document.getElementById('azione-corrente');
+            azioneDiv.style.display = 'block';
+            azioneDiv.innerText = formatEuro(pacco.valore);
+            
+            // Trigger animazione CSS
+            setTimeout(() => azioneDiv.classList.add('mostra'), 50);
+            
+            // Nascondi animazione dopo 5 secondi
+            setTimeout(() => {
+                azioneDiv.classList.remove('mostra');
+                setTimeout(() => azioneDiv.style.display = 'none', 800);
+            }, 5000);
         });
 
-        // Ascolta l'offerta del dottore
+        // Riceve offerta
         socket.on('display-mostra-offerta', (cifra) => {
             const banner = document.getElementById('banner-offerta');
-            banner.innerText = `☎️ IL DOTTORE OFFRE: € ${cifra}`;
-            banner.style.display = 'inline-block';
+            document.getElementById('cifra-offerta').innerText = formatEuro(Number(cifra));
+            banner.style.display = 'block';
+            setTimeout(() => banner.classList.add('mostra'), 50);
+        });
+
+        // Nasconde offerta
+        socket.on('display-nascondi-offerta', () => {
+            const banner = document.getElementById('banner-offerta');
+            banner.classList.remove('mostra');
+            setTimeout(() => banner.style.display = 'none', 500);
+        });
+
+        // Gestione Audio
+        socket.on('play-audio', (tipo) => {
+            const audioMap = {
+                'sigla': document.getElementById('audio-sigla'),
+                'telefono': document.getElementById('audio-telefono'),
+                'suspense': document.getElementById('audio-suspense')
+            };
+            const sound = audioMap[tipo];
+            if(sound) {
+                sound.currentTime = 0;
+                sound.play().catch(e => console.log("Errore audio (forse autoplay bloccato):", e));
+            }
+        });
+        
+        // Sincronizzazione riavvio partita per resettare tabellone
+        socket.on('stato-pacchi', (pacchi) => {
+             // Controlla se è una nuova partita (nessun pacco aperto)
+             const tuttiChiusi = pacchi.every(p => !p.aperto);
+             if(tuttiChiusi) {
+                 creaTabellone(); // Resetta i CSS dei premi
+             }
         });
     </script>
 </body>
