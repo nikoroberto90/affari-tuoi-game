@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Affari Tuoi - Schermo</title>
+    <title>MegaAffari Tuoi - Schermo</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap');
 
         body { 
             margin: 0; 
-            background: #000a1a; /* Sfondo scuro elegante */
+            background: #000a1a; 
             color: white; 
             font-family: 'Montserrat', sans-serif; 
             overflow: hidden; 
@@ -19,28 +19,76 @@
             height: 100vh;
             padding: 0 50px;
         }
+        
+        /* BRANDING */
+        .titolo-logo {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 3.5em;
+            font-weight: 900;
+            color: #ffd700; /* Oro */
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0px 4px 15px rgba(0,0,0,0.8), 2px 2px 0px #ffaa00;
+            z-index: 10;
+        }
 
-        /* Feed della Webcam in background */
+        .firma-watermark {
+            position: absolute;
+            bottom: 20px;
+            right: 30px;
+            font-size: 1.5em;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.4);
+            z-index: 10;
+        }
+
+        /* OVERLAY SBLOCCO AUDIO (Risolve il problema del blocco browser) */
+        #sblocco-audio {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.95);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .btn-sblocco {
+            padding: 20px 40px;
+            font-size: 24px;
+            font-weight: bold;
+            background: #cc0000;
+            color: white;
+            border: 3px solid white;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(200,0,0,0.5);
+        }
+
         #webcam-bg { 
             position: absolute; 
             top: 0; left: 0; 
             width: 100vw; height: 100vh; 
             object-fit: cover; 
             z-index: -1; 
-            opacity: 0.6; /* Un po' più visibile */
+            opacity: 0.6; 
         }
 
-        /* Colonne dei premi */
         .colonna-premi {
             display: flex;
             flex-direction: column;
+            justify-content: center;
             gap: 8px;
             z-index: 1;
             width: 250px;
+            height: 80vh; /* Permette la compressione verticale */
         }
 
         .premio-box {
-            background: linear-gradient(to right, #004488, #0066cc); /* Blu scuro/chiaro */
+            background: linear-gradient(to right, #004488, #0066cc);
             border: 2px solid #00aaff;
             border-radius: 8px;
             padding: 10px;
@@ -52,13 +100,11 @@
             transition: all 0.5s ease;
         }
 
-        /* Premi Rossi (metà destra) */
         .colonna-premi.rossi .premio-box {
             background: linear-gradient(to right, #880000, #cc0000);
             border-color: #ff3333;
         }
 
-        /* Stato premio eliminato */
         .premio-eliminato {
             background: #222 !important;
             border-color: #444 !important;
@@ -67,7 +113,14 @@
             box-shadow: none;
         }
 
-        /* Area Centrale per animazioni (Apertura Pacco / Offerta) */
+        /* GESTIONE MODALITA' VISUALIZZAZIONE DA REGIA */
+        body.mode-nascosto .colonna-premi {
+            display: none !important;
+        }
+        body.mode-restanti .premio-eliminato {
+            display: none !important;
+        }
+
         .area-centrale {
             flex-grow: 1;
             display: flex;
@@ -77,7 +130,6 @@
             z-index: 2;
         }
 
-        /* Animazione apertura pacco */
         #azione-corrente {
             font-size: 5em;
             font-weight: 900;
@@ -99,7 +151,6 @@
             transform: scale(1);
         }
 
-        /* Banner Offerta del Dottore */
         #banner-offerta {
             display: none;
             background: linear-gradient(to bottom, #eeeeee, #cccccc);
@@ -133,19 +184,25 @@
             margin-bottom: 10px;
         }
 
-        /* Elementi Audio nascosti */
         audio { display: none; }
     </style>
 </head>
-<body>
-    <video id="webcam-bg" autoplay muted></video>
+<body class="mode-tutti">
 
-    <!-- Colonna Blu (da 0 a 500) -->
-    <div class="colonna-premi blu" id="col-blu">
-        <!-- Generati da JS -->
+    <!-- Schermata iniziale obbligatoria per sbloccare l'audio -->
+    <div id="sblocco-audio">
+        <h1 style="color:white; margin-bottom: 30px;">Pronto per andare in onda!</h1>
+        <button class="btn-sblocco" onclick="inizializzaAudio()">CLICCA QUI PER INIZIARE E ATTIVARE L'AUDIO</button>
     </div>
 
-    <!-- Area Centrale (Animazioni) -->
+    <!-- Branding -->
+    <div class="titolo-logo">MegaAffari Tuoi</div>
+    <div class="firma-watermark">Nicola Roberto</div>
+
+    <video id="webcam-bg" autoplay muted></video>
+
+    <div class="colonna-premi blu" id="col-blu"></div>
+
     <div class="area-centrale">
         <div id="azione-corrente"></div>
         <div id="banner-offerta">
@@ -154,12 +211,9 @@
         </div>
     </div>
 
-    <!-- Colonna Rossa (da 1.000 a 300.000) -->
-    <div class="colonna-premi rossi" id="col-rossa">
-        <!-- Generati da JS -->
-    </div>
+    <div class="colonna-premi rossi" id="col-rossa"></div>
 
-    <!-- Suoni predefiniti (Usa URL pubblici o file locali se li hai) -->
+    <!-- AUDIO -->
     <audio id="audio-sigla" src="https://www.myinstants.com/media/sounds/affari-tuoi-sigla.mp3"></audio>
     <audio id="audio-telefono" src="https://www.myinstants.com/media/sounds/telefono-squillo.mp3"></audio>
     <audio id="audio-suspense" src="https://www.myinstants.com/media/sounds/suspense-drum-roll.mp3"></audio>
@@ -167,11 +221,22 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const formatEuro = (num) => "€ " + num.toLocaleString('it-IT');
-
-        const premiBlu = [0, 1, 5, 10, 20, 50, 100, 200, 500, 1000]; // 1000 è qui per dividere a metà (10 e 10)
+        const premiBlu = [0, 1, 5, 10, 20, 50, 100, 200, 500, 1000];
         const premiRossi = [5000, 10000, 15000, 20000, 30000, 50000, 75000, 100000, 200000, 300000];
 
-        // Creazione Tabellone
+        // Funzione fondamentale per l'audio: sblocca il browser
+        function inizializzaAudio() {
+            document.getElementById('sblocco-audio').style.display = 'none';
+            // Suona a volume zero un audio per sbloccare il contesto audio
+            const dummySound = document.getElementById('audio-telefono');
+            dummySound.volume = 0;
+            dummySound.play().then(() => {
+                dummySound.pause();
+                dummySound.currentTime = 0;
+                dummySound.volume = 1;
+            }).catch(e => console.log("Errore sblocco:", e));
+        }
+
         function creaTabellone() {
             const colBlu = document.getElementById('col-blu');
             const colRossa = document.getElementById('col-rossa');
@@ -186,41 +251,37 @@
         }
         creaTabellone();
 
-        // Webcam
         navigator.mediaDevices.getUserMedia({ video: true })
             .then(stream => { document.getElementById('webcam-bg').srcObject = stream; })
             .catch(err => console.error("Webcam non trovata"));
 
         const socket = io();
 
-        // Riceve comando apertura pacco
+        // Cambio modalità display
+        socket.on('set-display-mode', (mode) => {
+            document.body.className = mode;
+        });
+
         socket.on('display-apri-pacco', (pacco) => {
-            // Nascondi eventuale offerta
             document.getElementById('banner-offerta').classList.remove('mostra');
             setTimeout(() => document.getElementById('banner-offerta').style.display = 'none', 500);
 
-            // Scurisci il premio nel tabellone
             const elementoPremio = document.getElementById(`premio-${pacco.valore}`);
             if(elementoPremio) {
                 elementoPremio.classList.add('premio-eliminato');
             }
 
-            // Mostra animazione centrale
             const azioneDiv = document.getElementById('azione-corrente');
             azioneDiv.style.display = 'block';
             azioneDiv.innerText = formatEuro(pacco.valore);
-            
-            // Trigger animazione CSS
             setTimeout(() => azioneDiv.classList.add('mostra'), 50);
             
-            // Nascondi animazione dopo 5 secondi
             setTimeout(() => {
                 azioneDiv.classList.remove('mostra');
                 setTimeout(() => azioneDiv.style.display = 'none', 800);
             }, 5000);
         });
 
-        // Riceve offerta
         socket.on('display-mostra-offerta', (cifra) => {
             const banner = document.getElementById('banner-offerta');
             document.getElementById('cifra-offerta').innerText = formatEuro(Number(cifra));
@@ -228,14 +289,12 @@
             setTimeout(() => banner.classList.add('mostra'), 50);
         });
 
-        // Nasconde offerta
         socket.on('display-nascondi-offerta', () => {
             const banner = document.getElementById('banner-offerta');
             banner.classList.remove('mostra');
             setTimeout(() => banner.style.display = 'none', 500);
         });
 
-        // Gestione Audio
         socket.on('play-audio', (tipo) => {
             const audioMap = {
                 'sigla': document.getElementById('audio-sigla'),
@@ -244,18 +303,15 @@
             };
             const sound = audioMap[tipo];
             if(sound) {
+                sound.volume = 1;
                 sound.currentTime = 0;
-                sound.play().catch(e => console.log("Errore audio (forse autoplay bloccato):", e));
+                sound.play().catch(e => console.log("AutoPlay bloccato:", e));
             }
         });
         
-        // Sincronizzazione riavvio partita per resettare tabellone
         socket.on('stato-pacchi', (pacchi) => {
-             // Controlla se è una nuova partita (nessun pacco aperto)
              const tuttiChiusi = pacchi.every(p => !p.aperto);
-             if(tuttiChiusi) {
-                 creaTabellone(); // Resetta i CSS dei premi
-             }
+             if(tuttiChiusi) { creaTabellone(); }
         });
     </script>
 </body>

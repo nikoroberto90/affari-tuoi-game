@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Regia - Affari Tuoi</title>
+    <title>MegaAffari Tuoi - Regia</title>
     <style>
         body { 
             background: #111; 
@@ -11,13 +11,31 @@
             font-family: sans-serif; 
             padding: 15px; 
             margin: 0;
+            padding-bottom: 60px; /* Spazio per la firma in basso */
         }
-        h2 { text-align: center; color: #00aaff; margin-top: 5px; }
+        
+        /* BRANDING */
+        h2 { 
+            text-align: center; 
+            color: #ffd700; 
+            margin-top: 5px; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+        }
+        
+        .firma-watermark {
+            position: fixed;
+            bottom: 15px;
+            right: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #555;
+            z-index: 100;
+        }
 
-        /* Griglia Pacchi */
         .grid-pacchi { 
             display: grid; 
-            grid-template-columns: repeat(5, 1fr); /* 5 colonne per smartphone in orizzontale */
+            grid-template-columns: repeat(5, 1fr); 
             gap: 8px; 
             margin-bottom: 20px; 
         }
@@ -28,7 +46,7 @@
             font-weight: bold;
             border-radius: 8px;
             border: 2px solid #fff;
-            background: #4ab3f4; /* Celeste tipico dei pacchi */
+            background: #4ab3f4; 
             color: #000;
             cursor: pointer;
             text-align: center;
@@ -43,16 +61,12 @@
         .valore-nascosto {
             display: block;
             font-size: 11px;
-            color: #666; /* Poco visibile per te, ma utile */
+            color: #666; 
             margin-top: 5px;
         }
         
-        .btn-pacco:not(.aperto) .valore-nascosto {
-            color: #000;
-            opacity: 0.5;
-        }
+        .btn-pacco:not(.aperto) .valore-nascosto { color: #000; opacity: 0.5; }
 
-        /* Sezione Offerta */
         .pannello-controllo {
             background: #222;
             padding: 15px;
@@ -61,11 +75,7 @@
             border-left: 5px solid #cc0000;
         }
 
-        .input-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
+        .input-group { display: flex; gap: 10px; margin-bottom: 10px; }
 
         input[type="number"] {
             flex-grow: 1;
@@ -89,7 +99,6 @@
         .btn-invia-offerta { background: #cc0000; }
         .btn-nascondi-offerta { background: #555; }
 
-        /* Soundboard */
         .soundboard {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -100,11 +109,16 @@
             background: #444;
             border: 1px solid #666;
             padding: 15px;
-            font-size: 24px;
+            font-size: 16px;
             border-radius: 8px;
         }
+        
+        .btn-mode {
+            background: #004488;
+            border-color: #00aaff;
+            font-size: 14px;
+        }
 
-        /* Pulsante Nuova Partita */
         .btn-reset {
             width: 100%;
             padding: 15px;
@@ -118,14 +132,24 @@
     </style>
 </head>
 <body>
-    <h2>IL DOTTORE - REGIA</h2>
+    <!-- Branding -->
+    <h2>MegaAffari Tuoi - Regia</h2>
+    <div class="firma-watermark">Nicola Roberto</div>
     
-    <div id="griglia" class="grid-pacchi">
-        <!-- Generati da JS -->
+    <div id="griglia" class="grid-pacchi"></div>
+
+    <!-- NOVITA': Gestione Vista Schermo -->
+    <div class="pannello-controllo" style="border-left-color: #ffaa00;">
+        <h3 style="margin-top: 0;">📺 Inquadratura Display</h3>
+        <div class="soundboard">
+            <button class="btn-azione btn-mode" onclick="cambiaVista('mode-nascosto')">👁️ Nascondi Tutto<br><span style="font-size:11px">(Solo Concorrente)</span></button>
+            <button class="btn-azione btn-mode" onclick="cambiaVista('mode-tutti')">📦 Mostra Tutti<br><span style="font-size:11px">(Aperti oscurati)</span></button>
+            <button class="btn-azione btn-mode" onclick="cambiaVista('mode-restanti')">⚡ Solo Restanti<br><span style="font-size:11px">(Compressi)</span></button>
+        </div>
     </div>
 
     <div class="pannello-controllo">
-        <h3>☎️ Gestione Offerta</h3>
+        <h3 style="margin-top: 0;">☎️ Gestione Offerta</h3>
         <div class="input-group">
             <input type="number" id="input-offerta" placeholder="Cifra in Euro...">
         </div>
@@ -136,7 +160,7 @@
     </div>
 
     <div class="pannello-controllo" style="border-left-color: #00aaff;">
-        <h3>🎵 Effetti Audio (Su Display)</h3>
+        <h3 style="margin-top: 0;">🎵 Effetti Audio</h3>
         <div class="soundboard">
             <button class="btn-azione btn-suono" onclick="suona('sigla')">🎼<br><span style="font-size:12px">Sigla</span></button>
             <button class="btn-azione btn-suono" onclick="suona('telefono')">☎️<br><span style="font-size:12px">Telefono</span></button>
@@ -151,7 +175,6 @@
         const socket = io();
         const formatEuro = (num) => "€ " + num.toLocaleString('it-IT');
 
-        // Aggiorna Griglia
         socket.on('stato-pacchi', (pacchi) => {
             const griglia = document.getElementById('griglia');
             griglia.innerHTML = ''; 
@@ -159,8 +182,6 @@
             pacchi.forEach(pacco => {
                 const btn = document.createElement('div');
                 btn.className = `btn-pacco ${pacco.aperto ? 'aperto' : ''}`;
-                
-                // Formatta il bottone. Il valore è visibile piccolo in basso.
                 btn.innerHTML = `
                     <div style="font-size: 20px;">${pacco.numeroPacco}</div>
                     <span class="valore-nascosto">${formatEuro(pacco.valore)}</span>
@@ -177,23 +198,21 @@
             });
         });
 
+        // Gestione Vista
+        function cambiaVista(mode) {
+            socket.emit('comando-display-mode', mode);
+        }
+
         function inviaOfferta() {
             const cifra = document.getElementById('input-offerta').value;
             if(cifra) {
                 socket.emit('comando-offerta', cifra);
-                // svuota campo
                 document.getElementById('input-offerta').value = '';
             }
         }
 
-        function nascondiOfferta() {
-            socket.emit('comando-nascondi-offerta');
-        }
-
-        function suona(tipo) {
-            socket.emit('comando-audio', tipo);
-        }
-
+        function nascondiOfferta() { socket.emit('comando-nascondi-offerta'); }
+        function suona(tipo) { socket.emit('comando-audio', tipo); }
         function nuovaPartita() {
             if(confirm("Attenzione! Vuoi resettare tutto e rimescolare i pacchi per una nuova partita?")) {
                 socket.emit('comando-nuova-partita');
