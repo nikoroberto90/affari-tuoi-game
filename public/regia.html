@@ -11,10 +11,9 @@
             font-family: sans-serif; 
             padding: 15px; 
             margin: 0;
-            padding-bottom: 60px; /* Spazio per la firma in basso */
+            padding-bottom: 60px;
         }
         
-        /* BRANDING */
         h2 { 
             text-align: center; 
             color: #ffd700; 
@@ -98,6 +97,7 @@
 
         .btn-invia-offerta { background: #cc0000; }
         .btn-nascondi-offerta { background: #555; }
+        .btn-stop-audio { background: #880000; width: 100%; margin-top: 10px; }
 
         .soundboard {
             display: grid;
@@ -132,13 +132,11 @@
     </style>
 </head>
 <body>
-    <!-- Branding -->
     <h2>MegaAffari Tuoi - Regia</h2>
     <div class="firma-watermark">Nicola Roberto</div>
     
     <div id="griglia" class="grid-pacchi"></div>
 
-    <!-- NOVITA': Gestione Vista Schermo -->
     <div class="pannello-controllo" style="border-left-color: #ffaa00;">
         <h3 style="margin-top: 0;">📺 Inquadratura Display</h3>
         <div class="soundboard">
@@ -166,6 +164,8 @@
             <button class="btn-azione btn-suono" onclick="suona('telefono')">☎️<br><span style="font-size:12px">Telefono</span></button>
             <button class="btn-azione btn-suono" onclick="suona('suspense')">🥁<br><span style="font-size:12px">Suspense</span></button>
         </div>
+        <!-- NUOVO BOTTONE STOP AUDIO -->
+        <button class="btn-azione btn-stop-audio" onclick="fermaAudio()">🛑 FERMA TUTTI I SUONI</button>
     </div>
 
     <button class="btn-reset" onclick="nuovaPartita()">🔄 AVVIA NUOVA PARTITA</button>
@@ -198,10 +198,7 @@
             });
         });
 
-        // Gestione Vista
-        function cambiaVista(mode) {
-            socket.emit('comando-display-mode', mode);
-        }
+        function cambiaVista(mode) { socket.emit('comando-display-mode', mode); }
 
         function inviaOfferta() {
             const cifra = document.getElementById('input-offerta').value;
@@ -212,7 +209,10 @@
         }
 
         function nascondiOfferta() { socket.emit('comando-nascondi-offerta'); }
+        
         function suona(tipo) { socket.emit('comando-audio', tipo); }
+        function fermaAudio() { socket.emit('comando-stop-audio'); } // NUOVA FUNZIONE
+
         function nuovaPartita() {
             if(confirm("Attenzione! Vuoi resettare tutto e rimescolare i pacchi per una nuova partita?")) {
                 socket.emit('comando-nuova-partita');
